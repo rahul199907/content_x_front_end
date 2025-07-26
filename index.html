@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Content Generator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons (Like, Comment, Share) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+        }
+        /* Custom scrollbar for textareas */
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #e2e8f0; /* Tailwind gray-200 */
+            border-radius: 10px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #94a3b8; /* Tailwind gray-400 */
+            border-radius: 10px;
+        }
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #64748b; /* Tailwind gray-500 */
+        }
+        .linkedin-post-card {
+            border: 1px solid #e0e0e0;
+            background-color: #fff;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* shadow-md */
+            padding: 1.5rem; /* p-6 */
+            margin-bottom: 1.5rem; /* space-y-6 equivalent for separation */
+        }
+        .profile-pic {
+            width: 48px; /* h-12 w-12 */
+            height: 48px;
+            border-radius: 9999px; /* rounded-full */
+            background-color: #d1d5db; /* gray-300 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600; /* font-semibold */
+            color: #4b5563; /* gray-600 */
+            font-size: 1.25rem; /* text-xl */
+        }
+        .post-content {
+            white-space: pre-wrap; /* Preserves line breaks from AI output */
+            word-wrap: break-word; /* Breaks long words */
+            line-height: 1.5; /* leading-relaxed */
+            color: #374151; /* gray-700 */
+        }
+        .post-footer-icon {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6b7280; /* gray-500 */
+            font-weight: 500; /* font-medium */
+            cursor: pointer;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+        }
+        .post-footer-icon:hover {
+            background-color: #f3f4f6; /* gray-100 */
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-3xl space-y-6 md:space-y-8">
+        <h1 class="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-6">
+            LinkedIn Post & Hashtag Generator
+        </h1>
+
+        <!-- Input Section -->
+        <div class="space-y-4">
+            <div>
+                <label for="topicInput" class="block text-gray-700 text-sm font-medium mb-1">Topic <span class="text-red-500">*</span></label>
+                <input type="text" id="topicInput" placeholder="e.g., Future of AI in Marketing, Leadership Skills"
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+            </div>
+
+            <div>
+                <label for="toneSelect" class="block text-gray-700 text-sm font-medium mb-1">Tone</label>
+                <select id="toneSelect"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+                    <option value="professional">Professional</option>
+                    <option value="conversational">Conversational</option>
+                    <option value="insightful">Insightful</option>
+                    <option value="inspirational">Inspirational</option>
+                    <option value="witty">Witty</option>
+                    <option value="data-driven">Data-driven</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="lengthSelect" class="block text-gray-700 text-sm font-medium mb-1">Length</label>
+                <select id="lengthSelect"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+                    <option value="short">Short (150-300 chars)</option>
+                    <option value="medium">Medium (300-700 chars)</option>
+                    <option value="detailed">Detailed (700-1200 chars)</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="keywordsInput" class="block text-gray-700 text-sm font-medium mb-1">Keywords (comma-separated)</label>
+                <input type="text" id="keywordsInput" placeholder="e.g., innovation, leadership, digital transformation"
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+            </div>
+
+            <button id="generatePostBtn"
+                    class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold text-lg
+                           hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300
+                           transition duration-300 ease-in-out transform hover:scale-105 shadow-md">
+                Generate LinkedIn Posts
+            </button>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="hidden text-center text-blue-600 font-medium">
+            <svg class="animate-spin h-6 w-6 text-blue-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Generating content...
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative" role="alert">
+            <strong class="font-bold">Error!</strong>
+            <span class="block sm:inline" id="errorText"></span>
+        </div>
+
+        <!-- Generated Posts Section (Container for multiple posts) -->
+        <div id="generatedPostsContainer" class="space-y-6 md:space-y-8">
+            <!-- Posts will be dynamically inserted here -->
+        </div>
+
+        <!-- Message Box for Copy Confirmation -->
+        <div id="messageBox" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+            <div class="bg-white p-6 rounded-lg shadow-xl text-center max-w-sm w-full">
+                <p id="messageBoxText" class="text-lg font-semibold text-gray-800 mb-4"></p>
+                <button id="messageBoxCloseBtn"
+                        class="bg-blue-600 text-white py-2 px-5 rounded-lg font-semibold
+                               hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300">
+                    OK
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // API Endpoints (ensure these match your Node.js server)
+        const API_BASE_URL = 'http://localhost:3000'; // Ensure this matches your Node.js server port
+
+        // Get DOM elements
+        const topicInput = document.getElementById('topicInput');
+        const toneSelect = document.getElementById('toneSelect');
+        const lengthSelect = document.getElementById('lengthSelect');
+        const keywordsInput = document.getElementById('keywordsInput');
+        const generatePostBtn = document.getElementById('generatePostBtn');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        const generatedPostsContainer = document.getElementById('generatedPostsContainer');
+        const messageBox = document.getElementById('messageBox');
+        const messageBoxText = document.getElementById('messageBoxText');
+        const messageBoxCloseBtn = document.getElementById('messageBoxCloseBtn');
+
+        // Function to show message box
+        function showMessageBox(message) {
+            messageBoxText.textContent = message;
+            messageBox.classList.remove('hidden');
+        }
+
+        // Function to hide message box
+        messageBoxCloseBtn.addEventListener('click', () => {
+            messageBox.classList.add('hidden');
+        });
+
+        // Function to render a single LinkedIn post card
+        function renderLinkedInPostCard(postContent, hashtags, optionNumber) {
+            const card = document.createElement('div');
+            card.className = 'linkedin-post-card'; // Custom class for styling
+
+            const now = new Date();
+            const timeString = now.getHours() + 'h'; // Simple time for display
+
+            // Calculate character count for display
+            const charCount = postContent.length;
+            const seeMoreLimit = 240; // LinkedIn "See More" truncation limit
+            const charCountDisplay = `${charCount} / 3000 (Recommended: 200-500)`;
+            const seeMoreWarningDisplay = charCount > seeMoreLimit ? '<span class="text-red-500">(Content may be truncated by "See More" on LinkedIn)</span>' : '';
+
+
+            card.innerHTML = `
+                <div class="flex items-center mb-4">
+                    <div class="profile-pic mr-3">UN</div> <!-- User Name initials -->
+                    <div>
+                        <p class="font-semibold text-gray-800">Your Name (Generated Post Option ${optionNumber})</p>
+                        <p class="text-gray-500 text-xs">${timeString} • <span class="font-medium text-blue-600">Edited</span></p>
+                    </div>
+                </div>
+                <div class="post-content mb-4">${postContent.replace(/\n/g, '<br>')}</div>
+                <div class="text-blue-700 font-medium text-sm mb-4">${hashtags}</div>
+
+                <div class="text-right text-sm text-gray-500 mb-4">
+                    Characters: ${charCountDisplay} ${seeMoreWarningDisplay}
+                </div>
+
+                <div class="flex justify-between items-center text-gray-600 text-sm border-t border-gray-200 pt-4">
+                    <div class="flex space-x-4">
+                        <span class="post-footer-icon"><i class="far fa-thumbs-up"></i> Like</span>
+                        <span class="post-footer-icon"><i class="far fa-comment-dots"></i> Comment</span>
+                        <span class="post-footer-icon"><i class="fas fa-share"></i> Share</span>
+                    </div>
+                    <button class="bg-blue-500 text-white py-1.5 px-4 rounded-lg text-sm font-semibold
+                                   hover:bg-blue-600 transition duration-200 copy-single-post-btn"
+                                   data-post-content="${encodeURIComponent(postContent + '\n\n' + hashtags)}">
+                        Copy This Post
+                    </button>
+                </div>
+            `;
+            generatedPostsContainer.appendChild(card);
+        }
+
+        // Event Listener for Generate Post Button
+        generatePostBtn.addEventListener('click', async () => {
+            const topic = topicInput.value.trim();
+            const tone = toneSelect.value;
+            const length = lengthSelect.value;
+            const keywords = keywordsInput.value.split(',').map(k => k.trim()).filter(k => k.length > 0);
+
+            // Clear previous outputs and errors
+            generatedPostsContainer.innerHTML = ''; // Clear all previous posts
+            errorMessage.classList.add('hidden');
+            errorText.textContent = '';
+
+            if (!topic) {
+                errorMessage.classList.remove('hidden');
+                errorText.textContent = 'Please enter a topic to generate the LinkedIn post.';
+                return;
+            }
+
+            loadingIndicator.classList.remove('hidden');
+            generatePostBtn.disabled = true; // Disable button during generation
+
+            try {
+                // Call the Node.js API for post generation
+                const response = await fetch(`${API_BASE_URL}/generate-linkedin-post`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ topic, tone, length, keywords }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const fullPostContent = data.postContent;
+                    // Split the single string into individual post options
+                    // This regex looks for "Option X:" at the start of a line, allowing for flexible numbering
+                    const postOptions = fullPostContent.split(/(^Option \d+:)/gm).filter(Boolean);
+                    
+                    let postsToRender = [];
+                    for (let i = 0; i < postOptions.length; i += 2) {
+                        if (postOptions[i].startsWith('Option ')) {
+                            const optionNumber = parseInt(postOptions[i].replace('Option ', '').replace(':', '').trim());
+                            const content = postOptions[i+1] ? postOptions[i+1].trim() : '';
+                            postsToRender.push({ number: optionNumber, content: content });
+                        }
+                    }
+
+                    if (postsToRender.length === 0) {
+                        // Fallback if parsing fails or AI doesn't follow format
+                        // Display raw content if parsing fails, and generate hashtags for it
+                        const hashtagsData = await generateHashtags(fullPostContent);
+                        const hashtagsString = hashtagsData.hashtags.join(' ');
+                        renderLinkedInPostCard(fullPostContent, hashtagsString, 'N/A'); // Use N/A for option number
+                        showMessageBox('Could not parse multiple options. Displaying raw output. Please try refining your prompt or regenerating.');
+                    } else {
+                        // Render each post option
+                        for (const post of postsToRender) {
+                            // Generate hashtags for each individual post content
+                            const hashtagsData = await generateHashtags(post.content);
+                            const hashtagsString = hashtagsData.hashtags.join(' ');
+                            renderLinkedInPostCard(post.content, hashtagsString, post.number);
+                        }
+                    }
+
+                    // Attach event listeners to newly created copy buttons
+                    document.querySelectorAll('.copy-single-post-btn').forEach(button => {
+                        button.addEventListener('click', (event) => {
+                            const contentToCopy = decodeURIComponent(event.target.dataset.postContent);
+                            navigator.clipboard.writeText(contentToCopy)
+                                .then(() => showMessageBox('Post copied to clipboard!'))
+                                .catch(err => {
+                                    console.error('Failed to copy text: ', err);
+                                    // Fallback for older browsers/security restrictions
+                                    try {
+                                        const tempTextArea = document.createElement('textarea');
+                                        tempTextArea.value = contentToCopy;
+                                        document.body.appendChild(tempTextArea);
+                                        tempTextArea.select();
+                                        document.execCommand('copy');
+                                        document.body.removeChild(tempTextArea);
+                                        showMessageBox('Post copied to clipboard (fallback)!');
+                                    } catch (fallbackErr) {
+                                        showMessageBox('Failed to copy to clipboard. Please copy manually.');
+                                    }
+                                });
+                        });
+                    });
+
+                } else {
+                    errorMessage.classList.remove('hidden');
+                    errorText.textContent = data.error || 'An unknown error occurred during post generation.';
+                    console.error('API Error:', data.details);
+                }
+            } catch (error) {
+                errorMessage.classList.remove('hidden');
+                errorText.textContent = 'Failed to connect to the server. Please ensure the backend is running and CORS is configured.';
+                console.error('Fetch Error:', error);
+            } finally {
+                loadingIndicator.classList.add('hidden');
+                generatePostBtn.disabled = false; // Re-enable button
+            }
+        });
+
+        // Function to generate hashtags (now returns data for rendering)
+        async function generateHashtags(postText) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/generate-hashtags`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ textContent: postText, numHashtags: 5, includeTrending: true }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    return { success: true, hashtags: data.hashtags };
+                } else {
+                    console.error('Hashtag API Error:', data.error || data.details);
+                    return { success: false, hashtags: [] };
+                }
+            } catch (error) {
+                console.error('Fetch Error for hashtags:', error);
+                return { success: false, hashtags: [] };
+            }
+        }
+
+    </script>
+</body>
+</html>
